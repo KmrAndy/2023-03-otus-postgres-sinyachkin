@@ -175,7 +175,7 @@ tps = 672.091456 (without initial connection time)
 ```
 _Причём при дефолтных настройках и при настройках из PGTune результат был хуже, чем при effective_io_concurrency = 10 и work_mem = 20 MB и shared_buffers с effective_cache_size, разделенными поровну_
 
-_Но самый главный прирост даёт установка значения параметра synchronous_commit = off_
+_Но самый главный прирост даёт установка значения параметра synchronous_commit = off - позволяет подтверждать транзакции до того, как они попали в журнал_
 ```
 postgres@postgres:/home/kmrandy$ pgbench -c 8 -P 6 -T 60 -j 8 -U postgres postgres
 pgbench (15.3 (Ubuntu 15.3-1.pgdg22.04+1))
