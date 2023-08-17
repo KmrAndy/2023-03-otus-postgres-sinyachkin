@@ -52,3 +52,7 @@ create table project_schema.logs_202401_spdefault
 partition of project_schema.logs_202401
 for values from ('2024-01-02') to ('2024-02-01');
 
+create table project_schema.logs_202402
+partition of project_schema.logs
+default;
+

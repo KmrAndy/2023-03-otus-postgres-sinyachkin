@@ -16,29 +16,58 @@ exception
     raise;
 end$$;
 
-with recursive inh as (
-   select i.inhrelid, null::text as parent
-   from pg_catalog.pg_inherits i
-     join pg_catalog.pg_class cl on i.inhparent = cl.oid
-     join pg_catalog.pg_namespace nsp on cl.relnamespace = nsp.oid
-   where nsp.nspname = 'project_schema'          ---<< change table schema here
-     and cl.relname = 'logs'   ---<< change table name here
-   union all
-   select i.inhrelid, (i.inhparent::regclass)::text
-   from inh
-   join pg_catalog.pg_inherits i on (inh.inhrelid = i.inhparent)
-)
-select c.relname as partition_name,
-        n.nspname as partition_schema,
-        pg_get_expr(c.relpartbound, c.oid, true) as partition_expression,
-        pg_get_expr(p.partexprs, c.oid, true) as sub_partition,
-        parent,
-        case p.partstrat
-          when 'l' then 'LIST'
-          when 'r' then 'RANGE'
-        end as sub_partition_strategy
-from inh
-   join pg_catalog.pg_class c on inh.inhrelid = c.oid
-   join pg_catalog.pg_namespace n on c.relnamespace = n.oid
-   left join pg_partitioned_table p on p.partrelid = c.oid
-order by n.nspname, c.relname
+do
+$$
+declare
+  v_partitions_params partition_params[];
+begin
+  select array_agg((partition_name, table_owner, table_name)::partition_params)
+  into v_partitions_params
+  from maintenance_schema.get_table_partitions(i_table_owner        => 'project_schema'
+                                                               , i_table_name         => 'logs'
+                                                               , i_partitioning_type  => 'r'
+                                                               , i_search_type        => 1
+                                                               , i_search_direction   => 'PREV'
+                                                               , i_search_date        => current_date);
+  
+end;
+$$
+language  plpgsql;
+
+select array_agg((partition_name, table_owner, table_name)::partition_params) from maintenance_schema.get_table_partitions(i_table_owner        => 'project_schema'
+                                                               , i_table_name         => 'logs'
+                                                               , i_partitioning_type  => 'r'
+                                                               , i_search_type        => 1
+                                                               , i_search_direction   => 'PREV'
+                                                               , i_search_date        => current_date);
+                                                              
+                                                              with tab as (
+  values
+    ((1, 'dog')::rt),
+    ((2, 'cat')::rt),
+    ((3, 'ant')::rt))
+select array_agg(column1 order by column1) as arr
+from tab;
+
+select * from project_schema.logs;
+
+commit;
+
+CREATE TABLE cities (
+    city_id      bigserial not null,
+    name         text not null,
+    population   bigint
+) PARTITION BY LIST (population);
+
+CREATE TABLE cities_1
+    PARTITION OF cities (
+    CONSTRAINT city_id_nonzero CHECK (city_id != 0)
+) FOR VALUES IN (1);
+
+
+CREATE TABLE cities_2
+    PARTITION OF cities (
+    CONSTRAINT city_id_nonzero CHECK (city_id != 0)
+) FOR VALUES in (2);
+
+drop table cities;
