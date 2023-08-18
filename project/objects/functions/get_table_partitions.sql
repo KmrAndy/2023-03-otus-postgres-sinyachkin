@@ -1,14 +1,14 @@
-create or replace function maintenance_schema.get_table_partitions(i_table_owner        varchar
-                                                                 , i_table_name         varchar
-                                                                 , i_partitioning_type  varchar
+create or replace function maintenance_schema.get_table_partitions(i_table_owner        varchar(128)
+                                                                 , i_table_name         varchar(128)
+                                                                 , i_partitioning_type  varchar(1)
                                                                  , i_search_type        integer
-                                                                 , i_search_direction   varchar
+                                                                 , i_search_direction   varchar(4)
                                                                  , i_search_date        date)
 returns setof maintenance_schema.partition_params
 as
 $body$
 declare
-  v_partitions_params partition_params[];
+  v_partitions_params maintenance_schema.partition_params[];
   v_date_key          integer;
 begin
   if i_partitioning_type = 'r' then
@@ -45,7 +45,7 @@ begin
     return query
     with t1 as
     (
-     select trim('''' from regexp_substr(p.partition_value, '''.*?''', 1, 1)) date_key
+     select trim(regexp_substr(p.partition_value, '\d+')) part_key
           , p.partition_name
           , p.table_owner
           , p.table_name
@@ -65,13 +65,13 @@ begin
          , t1.table_owner::varchar(128)
          , t1.table_name::varchar(128)
       from t1
-     where translate(t1.date_key, '0123456789*', '*') = ''
+     where translate(t1.part_key, '*0123456789', '*') = ''
        and (   (    i_search_type = 1
-                and length(date_key) = 8
-                and (   (i_search_direction = 'PREV' and t1.date_key::integer < v_date_key)
-                     or (i_search_direction = 'NEXT' and t1.date_key::integer >= v_date_key)))
+                and length(part_key) = 8
+                and (   (i_search_direction = 'PREV' and t1.part_key::integer < v_date_key)
+                     or (i_search_direction = 'NEXT' and t1.part_key::integer >= v_date_key)))
             or (    i_search_type = 2))
-     order by t1.date_key;
+     order by t1.part_key::integer;
   end if;
 end;
 $body$

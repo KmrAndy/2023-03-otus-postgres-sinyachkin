@@ -19,55 +19,52 @@ end$$;
 do
 $$
 declare
-  v_partitions_params partition_params[];
+  v_result  integer;
+  v_message varchar(255);
 begin
-  select array_agg((partition_name, table_owner, table_name)::partition_params)
-  into v_partitions_params
-  from maintenance_schema.get_table_partitions(i_table_owner        => 'project_schema'
-                                                               , i_table_name         => 'logs'
-                                                               , i_partitioning_type  => 'r'
-                                                               , i_search_type        => 1
-                                                               , i_search_direction   => 'PREV'
-                                                               , i_search_date        => current_date);
-  
+  call maintenance_schema.drop_old_table_partitions(o_result  => v_result
+                                                  , o_message => v_message);
+  raise notice 'dropping partition - result: %, message: %', v_result, v_message;
 end;
 $$
 language  plpgsql;
 
-select array_agg((partition_name, table_owner, table_name)::partition_params) from maintenance_schema.get_table_partitions(i_table_owner        => 'project_schema'
-                                                               , i_table_name         => 'logs'
-                                                               , i_partitioning_type  => 'r'
-                                                               , i_search_type        => 1
-                                                               , i_search_direction   => 'PREV'
-                                                               , i_search_date        => current_date);
-                                                              
-                                                              with tab as (
-  values
-    ((1, 'dog')::rt),
-    ((2, 'cat')::rt),
-    ((3, 'ant')::rt))
-select array_agg(column1 order by column1) as arr
-from tab;
 
-select * from project_schema.logs;
+select * from project_schema.logs l order by l.log_id desc;
 
-commit;
+select * from pg_tables where schemaname = 'project_schema';
 
-CREATE TABLE cities (
-    city_id      bigserial not null,
-    name         text not null,
-    population   bigint
-) PARTITION BY LIST (population);
+select * from project_schema.drop_table_partitions;
 
-CREATE TABLE cities_1
-    PARTITION OF cities (
-    CONSTRAINT city_id_nonzero CHECK (city_id != 0)
-) FOR VALUES IN (1);
+project_schema.list_table_growthkey
+20230101
 
-
-CREATE TABLE cities_2
-    PARTITION OF cities (
-    CONSTRAINT city_id_nonzero CHECK (city_id != 0)
-) FOR VALUES in (2);
-
-drop table cities;
+with t1 as
+    (
+     select trim(regexp_substr(p.partition_value, '\d+')) part_key
+          , p.partition_name
+          , p.table_owner
+          , p.table_name
+          , p.partition_value
+       from (select pg_get_expr(tp.relpartbound, i.inhrelid, true) partition_value
+                  , nsp.nspname table_owner
+                  , t.relname   table_name
+                  , tp.relname  partition_name
+               from pg_catalog.pg_inherits i
+               join pg_catalog.pg_class t on i.inhparent = t.oid
+               join pg_catalog.pg_namespace nsp on t.relnamespace = nsp.oid
+               join pg_catalog.pg_class tp on i.inhrelid = tp.oid
+              where nsp.nspname = 'project_schema'
+                and t.relname   = 'list_table_growthkey') p
+             where p.partition_value != 'DEFAULT')
+    select t1.partition_name::varchar(128)
+         , t1.table_owner::varchar(128)
+         , t1.table_name::varchar(128)
+      from t1
+     where translate(t1.part_key, '*0123456789', '*') = ''
+       and (   (    2 = 1
+                and length(part_key) = 8
+                and (   ('PREV' = 'PREV' and t1.part_key::integer < 1)
+                     or ('PREV' = 'NEXT' and t1.part_key::integer >= 1)))
+            or (    2 = 2))
+     order by t1.part_key::integer

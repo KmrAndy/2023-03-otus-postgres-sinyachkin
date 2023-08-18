@@ -1,8 +1,7 @@
-create or replace function maintenance_schema.check_table(in  i_table_owner        varchar
-                                                        , in  i_table_name         varchar
-                                                        , out o_partitioning_type  varchar
-                                                        , out o_is_table_supported boolean)
-returns record
+create or replace procedure maintenance_schema.check_table(in  i_table_owner        varchar
+                                                         , in  i_table_name         varchar
+                                                         , out o_partitioning_type  varchar
+                                                         , out o_is_table_supported boolean)
 as
 $body$
 declare
