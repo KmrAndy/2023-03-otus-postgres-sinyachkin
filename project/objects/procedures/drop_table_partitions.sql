@@ -11,7 +11,7 @@ declare
   v_idx               integer;
 begin
   -- Собираем партиции таблицы
-  select array_agg((partition_name, table_owner, table_name)::maintenance_schema.partition_params)
+  select array_agg((partition_name, table_owner, table_name, partition_value, tablespace_name)::maintenance_schema.partition_params)
     into v_partitions_params
     from maintenance_schema.get_table_partitions(i_table_owner        => i_table_owner
                                                , i_table_name         => i_table_name

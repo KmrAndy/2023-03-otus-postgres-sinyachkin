@@ -6,5 +6,6 @@ create table project_schema.create_table_partitions
     table_name                varchar(128) not null,
     stored_partition_quantity integer not null,
     enabled                   varchar(1) not null default 'N',
-    search_type               integer not null
+    search_type               integer not null,
+    partition_interval        varchar(12)
 );

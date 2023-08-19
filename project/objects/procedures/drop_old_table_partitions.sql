@@ -20,9 +20,7 @@ begin
   	                                  , i_table_name         => v_rec.table_name
   	                                  , o_partitioning_type  => v_partitioning_type
   	                                  , o_is_table_supported => v_is_table_supported);
-  	
-  	raise notice '%.%', v_partitioning_type, v_is_table_supported; 
-  	
+  	       
   	if not v_is_table_supported then
   	  call project_schema.write_log('Таблица ' || v_rec.table_owner || '.' || v_rec.table_name || ' не поддерживается');
   	 
@@ -31,9 +29,7 @@ begin
   	  
   	  continue;
   	end if;
-  
-    raise notice 'Начинаем удаление партиций таблицы %.%', v_rec.table_owner, v_rec.table_name; 
-  	    
+    	    
     call maintenance_schema.drop_table_partitions(i_table_owner               => v_rec.table_owner
                                                 , i_table_name                => v_rec.table_name
                                                 , i_stored_partition_quantity => v_rec.stored_partition_quantity
@@ -45,7 +41,7 @@ begin
 exception
   when others then
     o_result  := 0;
-    o_message := 'Произошла ошибка при удалении старых партиций таблиц: ' || SQLERRM;
+    o_message := 'Произошла ошибка при удалении старых партиций таблиц: ' || sqlerrm;
 
     declare
       v_stacktrace project_schema.logs.stacktrace%type;

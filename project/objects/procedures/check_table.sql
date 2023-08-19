@@ -16,10 +16,10 @@ begin
      and c.relname = i_table_name;
   
   -- Работаем только с Range и List
-  if o_partitioning_type not in ('r', 'l') then
-    o_is_table_supported := false;
-  else
+  if o_partitioning_type in ('r', 'l') then
     o_is_table_supported := true;
+  else
+    o_is_table_supported := false;
   end if;
 end;
 $body$
