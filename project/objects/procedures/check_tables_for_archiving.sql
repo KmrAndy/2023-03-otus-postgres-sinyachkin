@@ -26,6 +26,16 @@ begin
     o_are_tables_supported := false;
     return;
   end if;
+  
+  -- Проверим свойства колонок у архивной и основной таблицы:
+  if   maintenance_schema.get_tables_diff_columns(i_table_owner, i_table_name, i_archive_table_name) > 0
+    or maintenance_schema.get_tables_diff_columns(i_table_owner, i_table_name, i_archive_table_name) > 0
+  then
+    o_are_tables_supported := false;
+    call project_schema.write_log('Колонки у ' || i_table_owner || '.' || i_table_name || ' и ' || 
+                                                  i_table_owner || '.' || i_archive_table_name || ' не совпадают');
+    return;
+  end if;
 end;
 $body$
 language  plpgsql;

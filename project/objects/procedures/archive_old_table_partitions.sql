@@ -15,7 +15,6 @@ begin
                      , archive_table_name 
                      , stored_partition_quantity
                      , search_type
-                     , partition_interval
                   from project_schema.archive_table_partitions
                  where enabled = 'Y')
   loop

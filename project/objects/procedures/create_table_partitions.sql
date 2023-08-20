@@ -14,7 +14,12 @@ declare
 begin
   -- Собираем партиции таблицы
   -- Массив отсортирован по возрастанию
-  select array_agg((partition_name, table_owner, table_name, partition_value, tablespace_name)::maintenance_schema.partition_params)
+  select array_agg((partition_name
+                  , table_owner
+                  , table_name
+                  , partition_value
+                  , tablespace_name
+                  , partition_expr)::maintenance_schema.partition_params)
     into v_partitions_params
     from maintenance_schema.get_table_partitions(i_table_owner        => i_table_owner
                                                , i_table_name         => i_table_name
@@ -27,11 +32,6 @@ begin
   if i_stored_partition_quantity - coalesce(array_length(v_partitions_params, 1), 0) <= 0 then
     call project_schema.write_log('Не нужно создавать партиции у таблицы ' || i_table_owner || '.' || i_table_name);
     return;
-  end if;
-  
-  -- Если нет будущих партиций
-  if coalesce(array_length(v_partitions_params, 1), 0) = 0 then
-    
   end if;
    
   -- Берём последнюю созданную партцию, от неё будет создавать следующие
@@ -122,20 +122,6 @@ begin
       execute format('reset default_tablespace');
 	end if;
 
-    -- После того, как собрали все параметры новой партиции, создаём её
-    -- default_tablespace нужен, чтобы индексы, если они есть на родительской таблице, создались в том же табличном пространстве, что и новая партиция
-    --execute format('set default_tablespace = %s', v_new_partition_params.tablespace_name);
-    /*execute 'create table ' || v_new_partition_params.table_owner || '.' || v_new_partition_params.partition_name ||
-           ' partition of ' || v_new_partition_params.table_owner || '.' || v_new_partition_params.table_name ||
-           ' ' || v_new_partition_params.partition_value || ' tablespace ' || v_new_partition_params.tablespace_name;*/
-    /*execute format('create table %s.%s partition of %s.%s %s tablespace %s', v_new_partition_params.table_owner
-                                                                           , v_new_partition_params.partition_name
-                                                                           , v_new_partition_params.table_owner
-                                                                           , v_new_partition_params.table_name
-                                                                           , v_new_partition_params.partition_value
-                                                                           , v_new_partition_params.tablespace_name);*/
-    --execute format('reset default_tablespace');
-   
     call project_schema.write_log('Партиция ' || v_new_partition_params.partition_name ||
                                   ' таблицы ' || v_new_partition_params.table_owner || '.' || v_new_partition_params.table_name || ' создана');
     

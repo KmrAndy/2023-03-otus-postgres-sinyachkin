@@ -8,10 +8,14 @@ as
 $body$
 declare
   v_partitions_params maintenance_schema.partition_params[];
-  v_idx               integer;
 begin
   -- Собираем партиции таблицы
-  select array_agg((partition_name, table_owner, table_name, partition_value, tablespace_name)::maintenance_schema.partition_params)
+  select array_agg((partition_name
+                  , table_owner
+                  , table_name
+                  , partition_value
+                  , tablespace_name
+                  , partition_expr)::maintenance_schema.partition_params)
     into v_partitions_params
     from maintenance_schema.get_table_partitions(i_table_owner        => i_table_owner
                                                , i_table_name         => i_table_name
@@ -27,12 +31,12 @@ begin
   end if;
   
   -- Удаляем подходящие партиции
-  for v_idx in array_lower(v_partitions_params, 1) .. array_upper(v_partitions_params, 1) - i_stored_partition_quantity
+  for p in array_lower(v_partitions_params, 1) .. array_upper(v_partitions_params, 1) - i_stored_partition_quantity
   loop
-    execute format('drop table %I.%I', v_partitions_params[v_idx].table_owner, v_partitions_params[v_idx].partition_name);
+    execute format('drop table %I.%I', v_partitions_params[p].table_owner, v_partitions_params[p].partition_name);
    
-    call project_schema.write_log('Партиция ' || v_partitions_params[v_idx].partition_name ||
-                                  ' таблицы ' || v_partitions_params[v_idx].table_owner || '.' || v_partitions_params[v_idx].table_name || ' удалена');
+    call project_schema.write_log('Партиция ' || v_partitions_params[p].partition_name ||
+                                  ' таблицы ' || v_partitions_params[p].table_owner || '.' || v_partitions_params[p].table_name || ' удалена');
   end loop;
 end;
 $body$

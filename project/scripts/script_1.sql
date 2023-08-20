@@ -1,7 +1,10 @@
 -- Создаём БД project_main_db
 create database project_main_db;
 
---Подключаемся к БД project_main_db
+-- Создаём БД project_archive_db
+create database project_archive_db;
+
+--Подключаемся к БД project_main_db и project_archive_db
 -- Выполняем дальнейшие шаги
 drop schema if exists project_schema cascade;
 create schema project_schema;
