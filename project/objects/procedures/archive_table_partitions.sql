@@ -49,6 +49,11 @@ begin
                                                                 , i_table_owner
                                                                 , v_partitions_params[p].partition_name
                                                                 , v_partitions_params[p].partition_expr);
+    
+    -- Делаем вставку в очередь для переноса в архивную БД
+    call maintenance_schema.queue_to_archive(i_table_owner    => i_table_owner
+                                           , i_table_name     => i_archive_table_name
+                                           , i_partition_name => v_partitions_params[p].partition_name);
    
     call project_schema.write_log('Партиция ' || v_partitions_params[p].partition_name || ' таблицы ' || i_table_owner || '.' || i_table_name ||
                                                                     ' перенесена в архивную таблицу ' || i_table_owner || '.' || i_archive_table_name);

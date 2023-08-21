@@ -40,19 +40,16 @@ create table project_schema.logs_202312 partition of project_schema.logs for val
 
 reset default_tablespace;
 
-create table project_schema.logs_202301
+create table project_schema.logs_202303
 partition of project_schema.logs
-for values from ('2023-01-01'::timestamp) to ('2023-02-01'::timestamp) partition by range(log_date);
+for values from ('2023-03-01'::timestamp) to ('2023-04-01'::timestamp) partition by range(log_date);
 
-create table project_schema.logs_202301_sp1
-partition of project_schema.logs_202301
-for values from ('2023-01-01') to ('2023-01-02');
+create table project_schema.logs_202303_sp1
+partition of project_schema.logs_202303
+for values from ('2023-03-01') to ('2023-03-02');
  
-create table project_schema.logs_202301_spdefault
-partition of project_schema.logs_202301
-for values from ('2023-01-02') to ('2023-02-01');
+create table project_schema.logs_202303_spdefault
+partition of project_schema.logs_202303
+for values from ('2023-03-02') to ('2023-04-01');
 
-create table project_schema.logs_202402
-partition of project_schema.logs
-default;
 
