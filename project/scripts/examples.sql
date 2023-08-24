@@ -35,7 +35,7 @@ language  plpgsql;
 
 select *
   from maintenance_schema.get_table_partitions(i_table_owner        => 'project_schema'
-                                             , i_table_name         => 'archiever_queue'
+                                             , i_table_name         => 'arch_logs'
                                              , i_partitioning_type  => 'r'
                                              , i_search_type        => 1
                                              , i_search_direction   => 'PREV'
